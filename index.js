@@ -105,7 +105,6 @@ const listFiles = (auth) => {
     });
 };
 
-
 const listMajors = (auth) => {
     var sheets = google.sheets('v4');
     sheets.spreadsheets.values.get({
