@@ -6,6 +6,9 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 const path = require('path');
 
+const SPREADSHEET_ID = "1spn_v2h6Q_nr9nnqQjjV-JNrx04u3iszSkBZzqfeNzU";
+let lastRow = 3;
+
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
 
@@ -21,7 +24,7 @@ fs.readFile('client_secret.json', (err, content) => {
     }
     // Authorize a client with the loaded credentials, then call the
     // Google Sheets API.
-    authorize(JSON.parse(content), listFiles);
+    authorize(JSON.parse(content), insertAtLastRow);
 });
 
 const authorize = (credentials, callback) => {
@@ -82,6 +85,81 @@ const storeToken = (token) => {
  * Print the names and majors of students in a sample spreadsheet:
  * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  */
+const insertAtLastRow = (auth) => {
+    const sheets = google.sheets('v4');
+    const options = {
+        auth: auth,
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Sheet1!A${lastRow + 1}`,
+        valueInputOption: "RAW",
+        resource: {
+            majorDimension: "ROWS",
+            values: [
+                ['Works!!']
+            ]
+        }
+    };
+    sheets.spreadsheets.values.update(options, (err, res) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        console.log(JSON.stringify(res, null, 2));
+    });
+};
+
+const readSheet = (auth) => {
+    const sheets = google.sheets('v4');
+    const options = {
+        auth: auth,
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Sheet1'
+    };
+    sheets.spreadsheets.values.get(options, (err, res) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        console.log(JSON.stringify(res, null, 2));
+        lastRow = res.values.length;
+        console.log(res.values.length);
+    });
+};
+
+const createSheet = (auth) => {
+    const sheets = google.sheets('v4');
+    const options = {
+        auth: auth,
+        resource: {
+            properties: {
+                title: 'My Api Test'
+            }
+        }
+    };
+    sheets.spreadsheets.create(options, (err, res) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        console.log(JSON.stringify(res, null, 2));
+    });
+};
+
+const getSheet = (auth) => {
+    const sheets = google.sheets('v4');
+    const options = {
+        auth: auth,
+        spreadsheetId: SPREADSHEET_ID
+    };
+    sheets.spreadsheets.get(options, (err, res) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        console.log(JSON.stringify(res, null, 2));
+    });
+};
+
 const listFiles = (auth) => {
     let service = google.drive('v3');
     let options = {
