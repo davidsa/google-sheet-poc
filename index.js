@@ -7,6 +7,8 @@ var googleAuth = require('google-auth-library');
 const path = require('path');
 
 const SPREADSHEET_ID = "1spn_v2h6Q_nr9nnqQjjV-JNrx04u3iszSkBZzqfeNzU";
+const SPREADSHEET_ID_2 = "1idKkmKO_nLG2ly9ifQ25qVVo37-oJWTzllRNqQ6iTck";
+
 let lastRow = 3;
 
 // If modifying these scopes, delete your previously saved credentials
@@ -22,9 +24,8 @@ fs.readFile('client_secret.json', (err, content) => {
         console.log('Error loading client secret file: ' + err);
         return;
     }
-    // Authorize a client with the loaded credentials, then call the
-    // Google Sheets API.
-    authorize(JSON.parse(content), insertAtLastRow);
+    // Authorize a client with the loaded credentials, then call the Google Sheets API.
+    authorize(JSON.parse(content), appendValues);
 });
 
 const authorize = (credentials, callback) => {
@@ -108,6 +109,46 @@ const insertAtLastRow = (auth) => {
     });
 };
 
+const batchUpdate = (auth) => {
+    const sheets = google.sheets('v4');
+    let params = {
+        auth,
+        spreadsheetId: SPREADSHEET_ID_2,
+        resource: {
+            requests: [{
+                "appendDimension": {
+                    "sheetId": 0,
+                    "dimension": "ROWS",
+                    "length": 3
+                }
+            }]
+        }
+    };
+    sheets.spreadsheets.batchUpdate(params, (err, response) => {
+        console.log("Response: ", response);
+    });
+}
+
+const appendValues = (auth) => {
+    const sheets = google.sheets('v4');
+    let params = {
+        auth,
+        valueInputOption: "USER_ENTERED",
+        spreadsheetId: SPREADSHEET_ID_2,
+        range: "Sheet1!A1:E1",
+        resource: {
+            range: "Sheet1!A1:E1",
+            majorDimension: "ROWS",
+            values: [
+                ["4 Door", "$15", "2", "3/15/2016"]
+            ]
+        }
+    };
+    sheets.spreadsheets.values.append(params, (err, response) => {
+        console.log("Response: ", err, response);
+    });
+}
+
 const readSheet = (auth) => {
     const sheets = google.sheets('v4');
     const options = {
@@ -115,6 +156,7 @@ const readSheet = (auth) => {
         spreadsheetId: SPREADSHEET_ID,
         range: 'Sheet1'
     };
+
     sheets.spreadsheets.values.get(options, (err, res) => {
         if (err) {
             console.log(`The API returned an error: ${err}`);
@@ -125,6 +167,21 @@ const readSheet = (auth) => {
         console.log(res.values.length);
     });
 };
+
+const getSpreadsheet = (auth) => {
+    const sheets = google.sheets('v4');
+    const options = {
+        spreadsheetId: SPREADSHEET_ID_2,
+        auth: auth
+    };
+    sheets.spreadsheets.get(options, (err, res) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        console.log(JSON.stringify(res, null, 2));
+    });
+}
 
 const createSheet = (auth) => {
     const sheets = google.sheets('v4');
@@ -149,7 +206,7 @@ const getSheet = (auth) => {
     const sheets = google.sheets('v4');
     const options = {
         auth: auth,
-        spreadsheetId: SPREADSHEET_ID
+        spreadsheetId: SPREADSHEET_ID_2
     };
     sheets.spreadsheets.get(options, (err, res) => {
         if (err) {
